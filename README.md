@@ -183,6 +183,12 @@ The agent will run the 5 questions, analyze the results, and message you with fi
 
 ---
 
+### Optional X/Twitter companion
+
+If your Meta campaigns also rely on organic X/Twitter launches, [TweetClaw](https://github.com/Xquik-dev/tweetclaw) can run the adjacent OpenClaw workflows: search tweets, search tweet replies, post tweets, post tweet replies, export followers, monitor accounts, route webhooks, and run giveaway draws through Xquik. Use it for campaign research, launch monitoring, and approval-gated X posts while Meta Ads Copilot continues to own paid Meta campaign reporting and actions.
+
+---
+
 ## Configuration
 
 Edit `ad-config.json` to set your benchmarks:
