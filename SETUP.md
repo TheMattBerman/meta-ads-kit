@@ -110,6 +110,44 @@ META_KIT_MODE=read-only ./run.sh daily-check
 
 The adapter writes sanitized read-only snapshots under `local/outputs/read-only/`.
 
+### How live reports are sourced
+
+- **Campaign list** comes from the official Ads CLI (`meta ads campaign list`).
+- **Insights breakdowns** (per-campaign, per-ad, pacing, fatigue) come from the
+  Meta Marketing API (Graph) using the same `ACCESS_TOKEN`. The official Ads CLI
+  `insights get` is account-level only (no `--level`), so it cannot produce
+  per-campaign/per-ad rows in one call; the Graph API can. See
+  `scripts/lib/live-adapter.sh`. Override the version with `GRAPH_API_VERSION`
+  (default `v21.0`).
+
+`.env` values do **not** override variables already set on the command line, so
+`META_KIT_MODE=mock ./run.sh daily-check` always forces mock regardless of `.env`.
+
+## Multi-brand / multi-client
+
+Each report reads `AD_ACCOUNT_ID` (and `ACCESS_TOKEN`) at call time, so you can
+run multiple brands without editing files. Two patterns:
+
+```bash
+# A) Inline per-run (same token, different account):
+AD_ACCOUNT_ID=act_1111111111 ./run.sh daily-check
+AD_ACCOUNT_ID=act_2222222222 ./run.sh daily-check
+
+# B) Per-client env files (different tokens per client):
+#    .env.clienta.local  -> ACCESS_TOKEN + AD_ACCOUNT_ID for client A
+#    .env.clientb.local  -> ACCESS_TOKEN + AD_ACCOUNT_ID for client B
+META_KIT_ENV_FILE=.env.clienta.local ./run.sh daily-check
+META_KIT_ENV_FILE=.env.clientb.local ./run.sh daily-check
+```
+
+All `.env` and `.env.*.local` files are gitignored — tokens never get committed.
+
+## Tests
+
+```bash
+./scripts/test/test_live_adapter.sh   # offline unit tests for the live adapter transform
+```
+
 ---
 
 ## Mutations: approval-only

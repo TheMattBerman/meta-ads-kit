@@ -11,9 +11,16 @@ source "$SCRIPT_DIR/lib/mock.sh"
 source "$SCRIPT_DIR/lib/safety.sh"
 # shellcheck disable=SC1091
 source "$SCRIPT_DIR/lib/meta-cli.sh"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/lib/live-adapter.sh"
 
 mk_load_env
 mk_require_jq
+
+# The live adapter memoizes assembled insights to a per-process temp file so a
+# single daily-check does not refetch the Graph API once per report. Clean it up
+# when this process exits.
+trap 'rm -f "${TMPDIR:-/tmp}"/meta-kit-insights-*-$$.json 2>/dev/null || true' EXIT
 
 MODE="${1:-daily-check}"
 shift || true

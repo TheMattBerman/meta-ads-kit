@@ -146,7 +146,7 @@ No Ads Manager required at any step.
 
 ## Running With OpenClaw
 
-This kit is built for [OpenClaw](https://openclaw.ai), an open-source AI agent framework. Under the hood, reports route through `./run.sh` → `scripts/meta-kit.sh` → Meta's official Ads CLI (`meta`).
+This kit is built for [OpenClaw](https://openclaw.ai), an open-source AI agent framework. Under the hood, reports route through `./run.sh` → `scripts/meta-kit.sh`. Campaign lists use Meta's official Ads CLI (`meta`); per-campaign/per-ad insight breakdowns (winners, bleeders, pacing, fatigue) use the Meta Marketing API with the same token, since the official CLI's `insights get` is account-level only. See `scripts/lib/live-adapter.sh`.
 
 ```bash
 # Install OpenClaw
