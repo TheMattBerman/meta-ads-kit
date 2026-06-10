@@ -146,7 +146,13 @@ No Ads Manager required at any step.
 
 ## Running With OpenClaw
 
-This kit is built for [OpenClaw](https://openclaw.ai), an open-source AI agent framework. Under the hood, reports route through `./run.sh` → `scripts/meta-kit.sh`. Campaign lists use Meta's official Ads CLI (`meta`); per-campaign/per-ad insight breakdowns (winners, bleeders, pacing, fatigue) use the Meta Marketing API with the same token, since the official CLI's `insights get` is account-level only. See `scripts/lib/live-adapter.sh`.
+This kit is built for [OpenClaw](https://openclaw.ai), an open-source AI agent framework. Under the hood, reports route through `./run.sh` → `scripts/meta-kit.sh`.
+
+**Live data backends** (`META_KIT_BACKEND`):
+- `graph` (default) — direct Meta Marketing API via `curl`. Fast, zero extra deps. Campaign list via the official `meta` CLI.
+- `social-cli` — [`@vishalgojha/social-cli`](https://www.npmjs.com/package/@vishalgojha/social-cli), the kit's original engine: native `--level` insights, mutations, OAuth, FB/IG/WhatsApp. `npm i -g @vishalgojha/social-cli`, then `META_KIT_BACKEND=social-cli`.
+
+Both feed one shared transform, so report output is identical. The official Ads CLI's `insights get` is account-level only (no `--level`), which is why the breakdowns route through the Graph API or social-cli. See `scripts/lib/live-adapter.sh` and `scripts/lib/backend-social.sh`.
 
 ```bash
 # Install OpenClaw

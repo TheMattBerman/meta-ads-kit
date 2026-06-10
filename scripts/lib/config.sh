@@ -107,6 +107,14 @@ mk_mode() {
   printf '%s\n' "${META_KIT_MODE:-mock}"
 }
 
+# Live data backend (non-mock only):
+#   graph      — direct Meta Marketing API via curl (default; zero extra deps)
+#   social-cli — @vishalgojha/social-cli ("social" binary): native --level
+#                insights + mutations + OAuth. Requires `npm i -g @vishalgojha/social-cli`.
+mk_backend() {
+  printf '%s\n' "${META_KIT_BACKEND:-graph}"
+}
+
 mk_output_format() {
   printf '%s\n' "${META_KIT_OUTPUT:-json}"
 }

@@ -13,6 +13,8 @@ source "$SCRIPT_DIR/lib/safety.sh"
 source "$SCRIPT_DIR/lib/meta-cli.sh"
 # shellcheck disable=SC1091
 source "$SCRIPT_DIR/lib/live-adapter.sh"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/lib/backend-social.sh"
 
 mk_load_env
 mk_require_jq

@@ -54,6 +54,12 @@ mk_meta_cli_doctor() {
 
   echo "meta-kit doctor"
   echo "mode=$mode output=$output"
+  echo "backend=$(mk_backend)"
+  if command -v social >/dev/null 2>&1; then
+    echo "social_cli=found ($(social --version 2>/dev/null | head -1))"
+  else
+    echo "social_cli=missing (npm i -g @vishalgojha/social-cli for META_KIT_BACKEND=social-cli)"
+  fi
 
   if command -v meta >/dev/null 2>&1; then
     echo "meta_binary=found"
@@ -180,9 +186,14 @@ mk_meta_cli_read_json() {
       return 0
       ;;
     campaigns_list)
-      # The official CLI lists campaigns fine; normalize its array into {data:[...]}.
-      mk_meta_base_cmd || return 1
-      json="$("${META_BASE_CMD[@]}" --output "$(mk_output_format)" --no-input ads campaign list 2>/dev/null | mk_normalize_campaigns)"
+      # Campaign list: social-cli backend uses `social marketing campaigns`;
+      # graph backend uses the official Ads CLI. Both normalize to {data:[...]}.
+      if [[ "$(mk_backend)" == "social-cli" ]]; then
+        json="$(mk_social_campaigns_list)"
+      else
+        mk_meta_base_cmd || return 1
+        json="$("${META_BASE_CMD[@]}" --output "$(mk_output_format)" --no-input ads campaign list 2>/dev/null | mk_normalize_campaigns)"
+      fi
       mk_snapshot_json "$label" "$json" >/dev/null
       printf '%s\n' "$json"
       return 0

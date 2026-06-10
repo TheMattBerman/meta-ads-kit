@@ -135,19 +135,43 @@ mk_normalize_campaigns() {
 }
 
 # mk_build_live_insights  (network)
-# Fetches the raw Graph responses for the account and assembles the internal
+# Fetches the raw backend responses for the account and assembles the internal
 # schema. Memoized per process+account so daily-check does not refetch 5x.
+# Backend is selected by META_KIT_BACKEND (graph | social-cli).
 mk_build_live_insights() {
-  local account cache
+  local account cache backend bundle
   account="$(mk_normalize_account "${AD_ACCOUNT_ID:-${META_AD_ACCOUNT:-}}")"
   cache="${TMPDIR:-/tmp}/meta-kit-insights-${account}-$$.json"
+  backend="$(mk_backend)"
 
   if [[ -f "$cache" ]]; then
     cat "$cache"
     return 0
   fi
 
-  local acct_meta acct_7d acct_today camp_7d camp_today ad_7d ad_daily campaigns adsets bundle
+  case "$backend" in
+    social-cli)
+      if ! mk_social_installed; then
+        echo "ERROR: META_KIT_BACKEND=social-cli but the 'social' CLI is not installed. Run: npm i -g @vishalgojha/social-cli" >&2
+        return 1
+      fi
+      bundle="$(mk_fetch_bundle_social)"
+      ;;
+    *)
+      bundle="$(mk_fetch_bundle_graph)"
+      ;;
+  esac
+
+  printf '%s' "$bundle" | mk_assemble_insights | tee "$cache"
+}
+
+# mk_fetch_bundle_graph -> the 9-key raw bundle, sourced from the Marketing API
+# (Graph) via curl. Default backend; no extra dependencies.
+mk_fetch_bundle_graph() {
+  local account
+  account="$(mk_normalize_account "${AD_ACCOUNT_ID:-${META_AD_ACCOUNT:-}}")"
+
+  local acct_meta acct_7d acct_today camp_7d camp_today ad_7d ad_daily campaigns adsets
   # Account node (currency); not an edge, so call it directly rather than via mk_graph_get.
   acct_meta="$(curl -sG "${GRAPH_API_BASE}/${GRAPH_API_VERSION}/${account}" \
     --data-urlencode "access_token=${ACCESS_TOKEN:-${META_SYSTEM_USER_ACCESS_TOKEN:-}}" \
@@ -165,7 +189,7 @@ mk_build_live_insights() {
   # as the end of the expansion and appends the trailing "}" literally,
   # corrupting otherwise-valid JSON. Use a named empty-object default.
   local empty='{}'
-  bundle="$(jq -n \
+  jq -n \
     --argjson acct_meta "${acct_meta:-$empty}" \
     --argjson acct_7d "${acct_7d:-$empty}" \
     --argjson acct_today "${acct_today:-$empty}" \
@@ -175,7 +199,5 @@ mk_build_live_insights() {
     --argjson ad_daily "${ad_daily:-$empty}" \
     --argjson campaigns "${campaigns:-$empty}" \
     --argjson adsets "${adsets:-$empty}" \
-    '{acct_meta:$acct_meta, acct_7d:$acct_7d, acct_today:$acct_today, camp_7d:$camp_7d, camp_today:$camp_today, ad_7d:$ad_7d, ad_daily:$ad_daily, campaigns:$campaigns, adsets:$adsets}')"
-
-  printf '%s' "$bundle" | mk_assemble_insights | tee "$cache"
+    '{acct_meta:$acct_meta, acct_7d:$acct_7d, acct_today:$acct_today, camp_7d:$camp_7d, camp_today:$camp_today, ad_7d:$ad_7d, ad_daily:$ad_daily, campaigns:$campaigns, adsets:$adsets}'
 }

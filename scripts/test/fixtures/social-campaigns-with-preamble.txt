@@ -1,0 +1,8 @@
+! Note: Your Graph API version is v21.0. Marketing API guidance here assumes v24.0+.
+  You can set it via: social utils version set v24.0
+
+[
+  {"id": "111", "name": "Prospecting - Broad", "objective": "OUTCOME_LEADS", "status": "ACTIVE", "daily_budget": "15000"},
+  {"id": "222", "name": "Retargeting - 30d", "objective": "OUTCOME_LEADS", "status": "ACTIVE", "daily_budget": "8000"},
+  {"id": "333", "name": "Old Test", "objective": "OUTCOME_TRAFFIC", "status": "PAUSED", "daily_budget": "4000"}
+]

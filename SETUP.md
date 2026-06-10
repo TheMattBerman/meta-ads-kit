@@ -110,15 +110,38 @@ META_KIT_MODE=read-only ./run.sh daily-check
 
 The adapter writes sanitized read-only snapshots under `local/outputs/read-only/`.
 
-### How live reports are sourced
+### Live data backends
 
-- **Campaign list** comes from the official Ads CLI (`meta ads campaign list`).
-- **Insights breakdowns** (per-campaign, per-ad, pacing, fatigue) come from the
-  Meta Marketing API (Graph) using the same `ACCESS_TOKEN`. The official Ads CLI
-  `insights get` is account-level only (no `--level`), so it cannot produce
-  per-campaign/per-ad rows in one call; the Graph API can. See
-  `scripts/lib/live-adapter.sh`. Override the version with `GRAPH_API_VERSION`
-  (default `v21.0`).
+The non-mock data engine is selectable with `META_KIT_BACKEND`:
+
+| Backend | Value | Needs | Notes |
+|---------|-------|-------|-------|
+| Graph (default) | `graph` | just `curl` | Direct Meta Marketing API. Fast (~2s), zero extra deps. Campaign list via the official `meta` CLI. |
+| social-cli | `social-cli` | `npm i -g @vishalgojha/social-cli` | The kit's original engine. Native `--level` insights (async report runs), mutations, OAuth, FB/IG/WhatsApp. Slower (~50s — async jobs). |
+
+```bash
+# Default (Graph):
+./run.sh daily-check
+
+# social-cli backend:
+npm i -g @vishalgojha/social-cli
+social auth login --token "$ACCESS_TOKEN" --api facebook --no-open   # or: social auth login (OAuth)
+META_KIT_BACKEND=social-cli ./run.sh daily-check
+```
+
+Both backends produce identical report output — they feed the same internal
+schema through one shared transform (`mk_assemble_insights`). The official Ads
+CLI `insights get` is account-level only (no `--level`), which is why neither the
+reports nor a "meta-cli backend" can do per-ad breakdowns alone; both real
+backends solve that (Graph via `level=` params, social-cli via `--level`).
+
+Override the Graph API version with `GRAPH_API_VERSION` (default `v21.0`).
+
+**Pacing-target caveat:** the Graph backend sums active campaign + active ad-set
+daily budgets (it has an account-level ad-sets edge). social-cli has no
+account-level ad-sets edge, so its target reflects active *campaign* (CBO)
+budgets only and under-reports accounts whose budgets live at the ad-set level.
+Spend, winners, bleeders, and fatigue are identical across backends.
 
 `.env` values do **not** override variables already set on the command line, so
 `META_KIT_MODE=mock ./run.sh daily-check` always forces mock regardless of `.env`.
