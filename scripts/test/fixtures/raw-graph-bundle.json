@@ -1,0 +1,31 @@
+{
+  "acct_meta": { "id": "act_999000111", "currency": "USD", "name": "Test Brand" },
+  "acct_7d": { "data": [ { "spend": "1640.25", "account_currency": "USD", "date_start": "2026-06-03", "date_stop": "2026-06-09" } ] },
+  "acct_today": { "data": [ { "spend": "241.10", "date_start": "2026-06-10", "date_stop": "2026-06-10" } ] },
+  "camp_7d": { "data": [
+    { "campaign_id": "1201001", "campaign_name": "Prospecting - Broad", "spend": "1120.40", "ctr": "1.434221", "cpc": "0.521988", "date_start": "2026-06-03", "date_stop": "2026-06-09" },
+    { "campaign_id": "1201002", "campaign_name": "Retargeting - 30d", "spend": "519.85", "ctr": "2.370115", "cpc": "0.499003", "date_start": "2026-06-03", "date_stop": "2026-06-09" }
+  ] },
+  "camp_today": { "data": [
+    { "campaign_id": "1201001", "campaign_name": "Prospecting - Broad", "spend": "162.30" },
+    { "campaign_id": "1201002", "campaign_name": "Retargeting - 30d", "spend": "78.80" }
+  ] },
+  "ad_7d": { "data": [
+    { "ad_id": "3303003", "ad_name": "Carousel - Pain Points", "spend": "501.08", "ctr": "0.841552", "cpc": "0.954381", "frequency": "3.901221" },
+    { "ad_id": "3303004", "ad_name": "UGC Retargeting - Testimonial", "spend": "301.20", "ctr": "2.981004", "cpc": "0.557777", "frequency": "2.201991" },
+    { "ad_id": "3303005", "ad_name": "Discount Reminder", "spend": "218.65", "ctr": "1.389004", "cpc": "0.601233", "frequency": "4.099812" }
+  ] },
+  "ad_daily": { "data": [
+    { "ad_id": "3303003", "ad_name": "Carousel - Pain Points", "date_start": "2026-06-03", "ctr": "1.220004", "frequency": "3.200111" },
+    { "ad_id": "3303003", "ad_name": "Carousel - Pain Points", "date_start": "2026-06-06", "ctr": "0.970221", "frequency": "3.500004" },
+    { "ad_id": "3303003", "ad_name": "Carousel - Pain Points", "date_start": "2026-06-09", "ctr": "0.841552", "frequency": "3.901221" }
+  ] },
+  "campaigns": { "data": [
+    { "effective_status": "ACTIVE", "daily_budget": "15000" },
+    { "effective_status": "ACTIVE", "daily_budget": "8000" },
+    { "effective_status": "PAUSED", "daily_budget": "4000" }
+  ] },
+  "adsets": { "data": [
+    { "effective_status": "ACTIVE", "daily_budget": "0" }
+  ] }
+}

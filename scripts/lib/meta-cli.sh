@@ -54,6 +54,12 @@ mk_meta_cli_doctor() {
 
   echo "meta-kit doctor"
   echo "mode=$mode output=$output"
+  echo "backend=$(mk_backend)"
+  if command -v social >/dev/null 2>&1; then
+    echo "social_cli=found ($(social --version 2>/dev/null | head -1))"
+  else
+    echo "social_cli=missing (npm i -g @vishalgojha/social-cli for META_KIT_BACKEND=social-cli)"
+  fi
 
   if command -v meta >/dev/null 2>&1; then
     echo "meta_binary=found"
@@ -163,16 +169,39 @@ mk_meta_cli_read_json() {
     return 0
   fi
 
-  mk_meta_base_cmd || return 1
-
-  mk_meta_cli_command_for "$op"
-
   if [[ -z "$account" ]]; then
     echo "ERROR: META_AD_ACCOUNT is required outside mock mode." >&2
     return 1
   fi
-
   export AD_ACCOUNT_ID="$account"
+
+  # Insights ops need level=campaign / level=ad breakdowns. The official Ads CLI
+  # cannot do those (no --level), so the live adapter assembles them from the
+  # Graph API into the kit's internal schema. See scripts/lib/live-adapter.sh.
+  case "$op" in
+    insights_campaign_last_7d|insights_ad_last_7d|insights_ad_daily_last_7d)
+      json="$(mk_build_live_insights)"
+      mk_snapshot_json "$label" "$json" >/dev/null
+      printf '%s\n' "$json"
+      return 0
+      ;;
+    campaigns_list)
+      # Campaign list: social-cli backend uses `social marketing campaigns`;
+      # graph backend uses the official Ads CLI. Both normalize to {data:[...]}.
+      if [[ "$(mk_backend)" == "social-cli" ]]; then
+        json="$(mk_social_campaigns_list)"
+      else
+        mk_meta_base_cmd || return 1
+        json="$("${META_BASE_CMD[@]}" --output "$(mk_output_format)" --no-input ads campaign list 2>/dev/null | mk_normalize_campaigns)"
+      fi
+      mk_snapshot_json "$label" "$json" >/dev/null
+      printf '%s\n' "$json"
+      return 0
+      ;;
+  esac
+
+  mk_meta_base_cmd || return 1
+  mk_meta_cli_command_for "$op"
   local cmd=("${META_BASE_CMD[@]}" --output "$(mk_output_format)" --no-input "${META_CMD[@]:1}")
   json="$("${cmd[@]}" 2>/dev/null)"
   mk_snapshot_json "$label" "$json" >/dev/null

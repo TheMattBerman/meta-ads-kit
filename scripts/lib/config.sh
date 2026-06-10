@@ -20,8 +20,30 @@ mk_load_env() {
   fi
 
   if [[ -f "$env_file" ]]; then
-    # shellcheck disable=SC1090
-    set -a; source "$env_file"; set +a
+    # Load .env WITHOUT clobbering variables already set in the environment, so a
+    # command-line prefix wins over the file. This is what makes the documented
+    # overrides work, e.g. `META_KIT_MODE=mock ./run.sh ...` even when .env pins a
+    # mode. (A plain `set -a; source` would let the file overwrite the prefix.)
+    local _line _key _val
+    while IFS= read -r _line || [[ -n "$_line" ]]; do
+      _line="${_line%%$'\r'}"
+      _line="${_line#"${_line%%[![:space:]]*}"}"   # ltrim
+      [[ -z "$_line" || "$_line" == \#* ]] && continue
+      _line="${_line#export }"
+      [[ "$_line" != *=* ]] && continue
+      _key="${_line%%=*}"
+      _val="${_line#*=}"
+      _key="${_key//[[:space:]]/}"
+      [[ -z "$_key" ]] && continue
+      # Strip one layer of surrounding quotes from the value, if present.
+      if [[ "$_val" == \"*\" || "$_val" == \'*\' ]]; then
+        _val="${_val:1:${#_val}-2}"
+      fi
+      # Only set if not already provided by the caller's environment.
+      if [[ -z "${!_key+x}" ]]; then
+        export "$_key=$_val"
+      fi
+    done < "$env_file"
   fi
 
   # Official Ads CLI env vars are ACCESS_TOKEN, AD_ACCOUNT_ID, and BUSINESS_ID.
@@ -83,6 +105,14 @@ mk_config_get() {
 
 mk_mode() {
   printf '%s\n' "${META_KIT_MODE:-mock}"
+}
+
+# Live data backend (non-mock only):
+#   graph      — direct Meta Marketing API via curl (default; zero extra deps)
+#   social-cli — @vishalgojha/social-cli ("social" binary): native --level
+#                insights + mutations + OAuth. Requires `npm i -g @vishalgojha/social-cli`.
+mk_backend() {
+  printf '%s\n' "${META_KIT_BACKEND:-graph}"
 }
 
 mk_output_format() {
