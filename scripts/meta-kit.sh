@@ -11,6 +11,8 @@ source "$SCRIPT_DIR/lib/mock.sh"
 source "$SCRIPT_DIR/lib/safety.sh"
 # shellcheck disable=SC1091
 source "$SCRIPT_DIR/lib/meta-cli.sh"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/lib/xquik.sh"
 
 mk_load_env
 mk_require_jq
@@ -26,6 +28,8 @@ LIMIT=10
 PAYLOAD=""
 DRY_RUN=false
 FORCE_STATUS=""
+QUERY_TYPE="Latest"
+QUERIES=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -47,6 +51,22 @@ while [[ $# -gt 0 ]]; do
       ;;
     --limit)
       LIMIT="$2"
+      shift 2
+      ;;
+    --query)
+      if [[ $# -lt 2 ]]; then
+        echo "ERROR: --query requires a value." >&2
+        exit 1
+      fi
+      QUERIES+=("$2")
+      shift 2
+      ;;
+    --query-type)
+      if [[ $# -lt 2 ]]; then
+        echo "ERROR: --query-type requires Latest or Top." >&2
+        exit 1
+      fi
+      QUERY_TYPE="$2"
       shift 2
       ;;
     --payload)
@@ -293,6 +313,7 @@ Commands:
   efficiency
   recommend
   pacing
+  social-pulse --query <bounded-query> [--query <bounded-query>]
   create-ad --payload <json> --dry-run
 
 Options:
@@ -301,6 +322,8 @@ Options:
   --output json|table|plain
   --status ACTIVE
   --limit 10
+  --query '"manual ad reporting"'
+  --query-type Latest|Top
 USAGE
 }
 
@@ -315,6 +338,7 @@ case "$MODE" in
   efficiency) report_efficiency ;;
   recommend|optimize) report_recommend ;;
   pacing) report_pacing ;;
+  social-pulse) mk_xquik_social_pulse "$LIMIT" "$QUERY_TYPE" "${QUERIES[@]}" ;;
   create-ad) prepare_create_ad ;;
   *)
     usage
