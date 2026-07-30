@@ -29,6 +29,7 @@ mk_meta_base_cmd() {
 
 mk_meta_cli_command_for() {
   local op="$1"
+  local preset="${2:-last_7d}"
 
   # Official Ads CLI uses singular resources and noun-verb pattern:
   # meta ads <resource> <action> [options]
@@ -37,9 +38,9 @@ mk_meta_cli_command_for() {
     campaigns_list) META_CMD=(meta ads campaign list) ;;
     adsets_list) META_CMD=(meta ads adset list) ;;
     ads_list) META_CMD=(meta ads ad list) ;;
-    insights_campaign_last_7d) META_CMD=(meta ads insights get --date-preset last_7d --fields spend,impressions,clicks,ctr,cpc,reach) ;;
-    insights_ad_last_7d) META_CMD=(meta ads insights get --date-preset last_7d --fields spend,impressions,clicks,ctr,cpc,reach,frequency) ;;
-    insights_ad_daily_last_7d) META_CMD=(meta ads insights get --date-preset last_7d --time-increment daily --fields spend,impressions,clicks,ctr,cpc,reach,frequency) ;;
+    insights_campaign) META_CMD=(meta ads insights get --date-preset "$preset" --fields 'spend,impressions,clicks,ctr,cpc,reach') ;;
+    insights_ad) META_CMD=(meta ads insights get --date-preset "$preset" --fields 'spend,impressions,clicks,ctr,cpc,reach,frequency') ;;
+    insights_ad_daily) META_CMD=(meta ads insights get --date-preset "$preset" --time-increment daily --fields 'spend,impressions,clicks,ctr,cpc,reach,frequency') ;;
     *)
       echo "ERROR: unknown operation mapping: $op" >&2
       return 1
@@ -140,17 +141,21 @@ mk_meta_cli_doctor() {
 mk_meta_cli_read_json() {
   local op="$1"
   local label="$2"
+  local preset="${3:-}"
   local mode json account
 
   mode="$(mk_mode)"
   account="$(mk_normalize_account "${AD_ACCOUNT_ID:-${META_AD_ACCOUNT:-}}")"
+  if [[ -z "$preset" ]]; then
+    preset="$(mk_default_preset)"
+  fi
 
   if [[ "$mode" == "mock" ]]; then
     case "$op" in
       campaigns_list) json="$(mk_fixture_json campaigns.list.json)" ;;
       adsets_list) json="$(mk_fixture_json adsets.list.json)" ;;
       ads_list) json="$(mk_fixture_json ads.list.json)" ;;
-      insights_campaign_last_7d|insights_ad_last_7d|insights_ad_daily_last_7d)
+      insights_campaign|insights_ad|insights_ad_daily)
         json="$(mk_fixture_json insights.last_7d.json)"
         ;;
       *)
@@ -165,7 +170,7 @@ mk_meta_cli_read_json() {
 
   mk_meta_base_cmd || return 1
 
-  mk_meta_cli_command_for "$op"
+  mk_meta_cli_command_for "$op" "$preset"
 
   if [[ -z "$account" ]]; then
     echo "ERROR: META_AD_ACCOUNT is required outside mock mode." >&2
