@@ -1,0 +1,28 @@
+{
+  "tweets": [
+    {
+      "id": "1000000000000000001",
+      "text": "Manual reporting takes too long before each creative refresh.",
+      "createdAt": "2026-01-15T12:00:00Z",
+      "likeCount": 12,
+      "retweetCount": 3,
+      "replyCount": 2,
+      "author": {
+        "username": "sample_operator"
+      }
+    },
+    {
+      "id": "1000000000000000002",
+      "text": "We need ad hooks that reflect the words customers actually use.",
+      "createdAt": "2026-01-15T13:00:00Z",
+      "likeCount": 8,
+      "retweetCount": 1,
+      "replyCount": 4,
+      "author": {
+        "username": "sample_marketer"
+      }
+    }
+  ],
+  "has_next_page": false,
+  "next_cursor": ""
+}

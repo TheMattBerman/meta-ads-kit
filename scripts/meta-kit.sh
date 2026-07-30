@@ -11,6 +11,8 @@ source "$SCRIPT_DIR/lib/mock.sh"
 source "$SCRIPT_DIR/lib/safety.sh"
 # shellcheck disable=SC1091
 source "$SCRIPT_DIR/lib/meta-cli.sh"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/lib/xquik.sh"
 
 mk_load_env
 mk_require_jq
@@ -26,6 +28,8 @@ LIMIT=10
 PAYLOAD=""
 DRY_RUN=false
 FORCE_STATUS=""
+QUERY_TYPE="Latest"
+QUERIES=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -47,6 +51,22 @@ while [[ $# -gt 0 ]]; do
       ;;
     --limit)
       LIMIT="$2"
+      shift 2
+      ;;
+    --query)
+      if [[ $# -lt 2 ]]; then
+        echo "ERROR: --query requires a value." >&2
+        exit 1
+      fi
+      QUERIES+=("$2")
+      shift 2
+      ;;
+    --query-type)
+      if [[ $# -lt 2 ]]; then
+        echo "ERROR: --query-type requires Latest or Top." >&2
+        exit 1
+      fi
+      QUERY_TYPE="$2"
       shift 2
       ;;
     --payload)
@@ -89,7 +109,7 @@ report_campaigns() {
 
 report_overview() {
   local insights
-  insights="$(mk_meta_cli_read_json insights_campaign_last_7d overview)"
+  insights="$(mk_meta_cli_read_json insights_campaign overview "$PRESET")"
 
   echo "Overview"
   echo "========"
@@ -107,7 +127,7 @@ report_overview() {
 
 report_bleeders() {
   local insights
-  insights="$(mk_meta_cli_read_json insights_ad_last_7d bleeders)"
+  insights="$(mk_meta_cli_read_json insights_ad bleeders "$PRESET")"
 
   echo "Bleeders"
   echo "========"
@@ -123,7 +143,7 @@ report_bleeders() {
 
 report_winners() {
   local insights
-  insights="$(mk_meta_cli_read_json insights_ad_last_7d winners)"
+  insights="$(mk_meta_cli_read_json insights_ad winners "$PRESET")"
 
   echo "Winners"
   echo "======="
@@ -140,7 +160,7 @@ report_winners() {
 
 report_fatigue() {
   local insights
-  insights="$(mk_meta_cli_read_json insights_ad_daily_last_7d fatigue)"
+  insights="$(mk_meta_cli_read_json insights_ad_daily fatigue "$PRESET")"
 
   echo "Fatigue"
   echo "======="
@@ -171,7 +191,7 @@ report_fatigue() {
 
 report_efficiency() {
   local insights
-  insights="$(mk_meta_cli_read_json insights_campaign_last_7d efficiency)"
+  insights="$(mk_meta_cli_read_json insights_campaign efficiency "$PRESET")"
 
   echo "Efficiency"
   echo "=========="
@@ -187,7 +207,7 @@ report_efficiency() {
 
 report_recommend() {
   local insights
-  insights="$(mk_meta_cli_read_json insights_campaign_last_7d recommend)"
+  insights="$(mk_meta_cli_read_json insights_campaign recommend "$PRESET")"
 
   echo "Budget Recommendations"
   echo "======================"
@@ -211,7 +231,7 @@ report_recommend() {
 
 report_pacing() {
   local insights
-  insights="$(mk_meta_cli_read_json insights_campaign_last_7d pacing)"
+  insights="$(mk_meta_cli_read_json insights_campaign pacing "$PRESET")"
 
   echo "Pacing"
   echo "======"
@@ -293,6 +313,7 @@ Commands:
   efficiency
   recommend
   pacing
+  social-pulse --query <bounded-query> [--query <bounded-query>]
   create-ad --payload <json> --dry-run
 
 Options:
@@ -301,6 +322,8 @@ Options:
   --output json|table|plain
   --status ACTIVE
   --limit 10
+  --query '"manual ad reporting"'
+  --query-type Latest|Top
 USAGE
 }
 
@@ -315,6 +338,7 @@ case "$MODE" in
   efficiency) report_efficiency ;;
   recommend|optimize) report_recommend ;;
   pacing) report_pacing ;;
+  social-pulse) mk_xquik_social_pulse "$LIMIT" "$QUERY_TYPE" "${QUERIES[@]}" ;;
   create-ad) prepare_create_ad ;;
   *)
     usage
